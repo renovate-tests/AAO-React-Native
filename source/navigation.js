@@ -29,6 +29,7 @@ import PrivacyView from './views/settings/privacy'
 import LegalView from './views/settings/legal'
 import {StudentOrgsView, StudentOrgsDetailView} from './views/student-orgs'
 import {FaqView} from './views/faqs'
+import {DirectoryView} from './views/directory'
 // import {SnapshotsView} from './storybook'
 import HelpView from './views/help'
 
@@ -61,6 +62,7 @@ export const AppNavigator = StackNavigator(
     CreditsView: {screen: CreditsView},
     DictionaryDetailView: {screen: DictionaryDetailView},
     DictionaryView: {screen: DictionaryView},
+    DirectoryView: {screen: DirectoryView},
     EditHomeView: {screen: EditHomeView},
     EventDetailView: {screen: EventDetailView},
     FaqView: {screen: FaqView},
