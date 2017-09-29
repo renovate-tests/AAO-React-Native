@@ -51,6 +51,7 @@ const styles = StyleSheet.create({
 
 export const AppNavigator = StackNavigator(
   {
+    DirectoryView: {screen: DirectoryView},
     HomeView: {screen: HomeView},
     BuildingHoursDetailView: {screen: BuildingHoursDetailView},
     BuildingHoursView: {screen: BuildingHoursView},
@@ -62,7 +63,6 @@ export const AppNavigator = StackNavigator(
     CreditsView: {screen: CreditsView},
     DictionaryDetailView: {screen: DictionaryDetailView},
     DictionaryView: {screen: DictionaryView},
-    DirectoryView: {screen: DirectoryView},
     EditHomeView: {screen: EditHomeView},
     EventDetailView: {screen: EventDetailView},
     FaqView: {screen: FaqView},
