@@ -7,7 +7,6 @@ import android.util.Log;
 
 // keep these sorted alphabetically
 import com.avishayil.rnrestart.ReactNativeRestartPackage;
-import com.bugsnag.BugsnagReactNative;
 import com.BV.LinearGradient.LinearGradientPackage;
 import com.calendarevents.CalendarEventsPackage;
 import com.facebook.react.ReactApplication;
@@ -43,7 +42,6 @@ public class MainApplication extends Application implements ReactApplication {
       return Arrays.<ReactPackage>asList(
         new MainReactPackage(),
         // please keep these sorted alphabetically
-        BugsnagReactNative.getPackage(),
         new CalendarEventsPackage(),
         new CustomTabsPackage(),
         new GoogleAnalyticsBridgePackage(),
