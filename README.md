@@ -33,6 +33,7 @@ You should [create one yourself](https://console.developers.google.com/projectse
 
 - **Bugs:** All bugs should have the [`bug/general`](https://github.com/StoDevX/AAO-React-Native/labels/bug%2Fgeneral) or [`bug/layout`](https://github.com/StoDevX/AAO-React-Native/labels/bug%2Flayout) label in the issues
 - **Enhancements:** All ideas for improvement that are not being worked on should be [`closed` and labelled as `discussion`](https://github.com/StoDevX/AAO-React-Native/issues?utf8=%E2%9C%93&q=is%3Aclosed%20is%3Aissue%20label%3Astatus%2Fdiscussion)
+- **Slack:** If you're interesting in becoming a contributor, first join [this](https://aibohphobia.slack.com/signup) Slack workspace and then join the `#all-about-olaf` channel.
 
 For full information, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
