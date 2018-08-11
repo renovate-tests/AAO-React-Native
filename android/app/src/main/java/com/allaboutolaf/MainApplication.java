@@ -11,7 +11,6 @@ import com.bugsnag.BugsnagReactNative;
 import com.BV.LinearGradient.LinearGradientPackage;
 import com.calendarevents.CalendarEventsPackage;
 import com.facebook.react.ReactApplication;
-import io.sentry.RNSentryPackage;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
@@ -24,6 +23,7 @@ import com.mapbox.rctmgl.RCTMGLPackage;
 import com.oblador.keychain.KeychainPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.pusherman.networkinfo.RNNetworkInfoPackage;
+import io.sentry.RNSentryPackage;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +42,6 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
         new MainReactPackage(),
-            new RNSentryPackage(),
         // please keep these sorted alphabetically
         BugsnagReactNative.getPackage(),
         new CalendarEventsPackage(),
@@ -54,6 +53,7 @@ public class MainApplication extends Application implements ReactApplication {
         new ReactNativeRestartPackage(),
         new RNDeviceInfo(),
         new RNNetworkInfoPackage(),
+        new RNSentryPackage(),
         new VectorIconsPackage()
       );
     }
