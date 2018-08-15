@@ -26,28 +26,12 @@ class LifecycleScreenExample extends React.Component<any, any> {
 		text: 'nothing yet',
 	}
 
-	componentWillUnmount() {
-		alert('componentWillUnmount')
-	}
-
-	componentDidAppear() {
-		this.setState(() => ({text: 'componentDidAppear'}))
-	}
-
-	componentDidDisappear() {
-		alert('componentDidDisappear')
-	}
-
-	navigationButtonPressed({buttonId}) {
-		// a navigation-based button (for example in the topBar) was clicked. See section on buttons.
-		alert(buttonId)
-	}
-
 	render() {
 		return (
 			<View>
 				<Text>Lifecycle Screen</Text>
 				<Text>{this.state.text}</Text>
+				<Text>{this.props.text}</Text>
 			</View>
 		)
 	}
@@ -58,12 +42,69 @@ Navigation.registerComponent(
 	'navigation.playground.WelcomeScreen',
 	() => LifecycleScreenExample,
 )
+Navigation.registerComponent(
+	'navigation.playground.tab1',
+	() => LifecycleScreenExample,
+)
+Navigation.registerComponent(
+	'navigation.playground.tab2',
+	() => LifecycleScreenExample,
+)
 
 Navigation.events().registerAppLaunchedListener(() => {
 	Navigation.setRoot({
 		root: {
-			component: {
-				name: 'navigation.playground.WelcomeScreen',
+			stack: {
+				options: {
+					topBar: {
+						visible: true,
+					},
+				},
+				children: [
+					{
+						component: {
+							name: 'navigation.playground.WelcomeScreen',
+							passProps: {
+								text: 'This is screen 1',
+							},
+						},
+					},
+					{
+						bottomTabs: {
+							children: [
+								{
+									component: {
+										name: 'navigation.playground.tab1',
+										passProps: {
+											text: 'This is tab 1',
+										},
+										options: {
+											bottomTab: {
+												text: 'Tab 1',
+												icon: require('../images/icons/old-main.png'),
+											},
+										},
+									},
+								},
+								{
+									component: {
+										name: 'navigation.playground.tab2',
+										passProps: {
+											text: 'This is tab 2',
+										},
+										options: {
+											bottomTab: {
+												text: 'Tab 2',
+												icon: require('../images/icons/windmill.png'),
+											},
+										},
+									},
+								},
+							],
+							options: {},
+						},
+					},
+				],
 			},
 		},
 	})
