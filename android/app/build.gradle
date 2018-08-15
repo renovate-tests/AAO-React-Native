@@ -107,6 +107,8 @@ android {
         minSdkVersion 19
         targetSdkVersion TARGET_SDK_VERSION
 
+        missingDimensionStrategy "RNN.reactNativeVersion", "reactNative55"
+
         versionCode 1
         versionName "1.0.0"
 
@@ -119,6 +121,11 @@ android {
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     ext {
@@ -228,6 +235,7 @@ dependencies {
     implementation project(':react-native-google-analytics-bridge')
     implementation project(':react-native-keychain')
     implementation project(':react-native-linear-gradient')
+    implementation project(':react-native-navigation')
     implementation project(':react-native-network-info')
     implementation project(':react-native-restart')
     implementation project(':react-native-vector-icons')
@@ -255,4 +263,19 @@ gradle.projectsEvaluated {
     // hook bundleData into the android build process
     bundleDebugJsAndAssets.dependsOn bundleData
     bundleReleaseJsAndAssets.dependsOn bundleData
+}
+
+subprojects { subproject ->
+    afterEvaluate {
+        if ((subproject.plugins.hasPlugin('android') || subproject.plugins.hasPlugin('android-library'))) {
+            android {
+                variantFilter { variant ->
+                    def names = variant.flavors*.name
+                    if (names.contains("reactNative51") || names.contains("reactNative56")) {
+                        setIgnore(true)
+                    }
+                }
+            }
+        }
+    }
 }

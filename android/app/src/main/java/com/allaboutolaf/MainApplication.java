@@ -24,47 +24,54 @@ import com.oblador.keychain.KeychainPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.pusherman.networkinfo.RNNetworkInfoPackage;
 
+import com.reactnativenavigation.NavigationApplication;
+import com.reactnativenavigation.react.NavigationReactNativeHost;
+import com.reactnativenavigation.react.ReactGateway;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainApplication extends Application implements ReactApplication {
-
-  private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
-    @Override
-    public boolean getUseDeveloperSupport() {
-      return BuildConfig.DEBUG;
-    }
-
-    @Override
-    protected List<ReactPackage> getPackages() {
-      return Arrays.<ReactPackage>asList(
-        new MainReactPackage(),
-        // please keep these sorted alphabetically
-        BugsnagReactNative.getPackage(),
-        new CalendarEventsPackage(),
-        new CustomTabsPackage(),
-        new GoogleAnalyticsBridgePackage(),
-        new KeychainPackage(),
-        new LinearGradientPackage(),
-        new RCTMGLPackage(),
-        new ReactNativeRestartPackage(),
-        new RNDeviceInfo(),
-        new RNNetworkInfoPackage(),
-        new VectorIconsPackage()
-      );
-    }
-
-    @Override
-    protected String getJSMainModuleName() {
-      return "index";
-    }
-  };
+public class MainApplication extends NavigationApplication {
 
   @Override
-  public ReactNativeHost getReactNativeHost() {
-    return mReactNativeHost;
+  protected ReactGateway createReactGateway() {
+    ReactNativeHost host = new NavigationReactNativeHost(this, isDebug(), createAdditionalReactPackages()) {
+      @Override
+      protected String getJSMainModuleName() {
+        return "index";
+      }
+    };
+    return new ReactGateway(this, isDebug(), host);
+  }
+
+  @Override
+  public boolean isDebug() {
+    return BuildConfig.DEBUG;
+  }
+
+  protected List<ReactPackage> getPackages() {
+    // Add additional packages you require here
+    // No need to add RnnPackage and MainReactPackage
+    return Arrays.<ReactPackage>asList(
+      BugsnagReactNative.getPackage(),
+      new CalendarEventsPackage(),
+      new CustomTabsPackage(),
+      new GoogleAnalyticsBridgePackage(),
+      new KeychainPackage(),
+      new LinearGradientPackage(),
+      new RCTMGLPackage(),
+      new ReactNativeRestartPackage(),
+      new RNDeviceInfo(),
+      new RNNetworkInfoPackage(),
+      new VectorIconsPackage()
+    );
+  }
+
+  @Override
+  public List<ReactPackage> createAdditionalReactPackages() {
+      return getPackages();
   }
 
   @Override
@@ -88,5 +95,6 @@ public class MainApplication extends Application implements ReactApplication {
     if (cache != null) {
       cache.flush();
     }
+    super.onStop();
   }
 }

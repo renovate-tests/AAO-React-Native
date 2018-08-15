@@ -106,6 +106,7 @@
     "react-native-google-analytics-bridge": "5.7.1",
     "react-native-keychain": "3.0.0",
     "react-native-linear-gradient": "2.4.0",
+    "react-native-navigation": "2.0.2474",
     "react-native-network-info": "3.2.2",
     "react-native-popover-view": "1.0.0",
     "react-native-restart": "0.0.6",
