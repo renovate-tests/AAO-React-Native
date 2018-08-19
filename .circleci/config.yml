@@ -52,40 +52,40 @@ workflows:
     # different CIRCLE_WORKFLOW_ID, which should allow us to only deploy
     # nightlies from that branch.
     jobs: &basic-jobs
-      - cache-yarn-linux:
-          filters: &filters {tags: {only: /.*/}}
-      - cache-bundler-linux:
-          filters: &filters {tags: {only: /.*/}}
-      - danger:
-          filters: *filters
-          requires: [cache-yarn-linux]
-      - flow:
-          filters: *filters
-          requires: [cache-yarn-linux]
-      - jest:
-          filters: *filters
-          requires: [cache-yarn-linux]
-      - prettier:
-          filters: *filters
-          requires: [cache-yarn-linux]
-      - eslint:
-          filters: *filters
-          requires: [cache-yarn-linux]
-      - data:
-          filters: *filters
-          requires: [cache-yarn-linux]
-      - ios:
-          filters: *filters
-          requires: [danger, flow, jest, prettier, eslint, data]
-      - android:
-          filters: *filters
-          requires: [danger, flow, jest, prettier, eslint, data, cache-bundler-linux]
-      - ios-bundle:
-          filters: *filters
-          requires: [danger, flow, jest, prettier, eslint, data]
-      - android-bundle:
-          filters: *filters
-          requires: [danger, flow, jest, prettier, eslint, data]
+      - cache-yarn-linux: {}
+      #     filters: &filters {tags: {only: /.*/}}
+      # - cache-bundler-linux:
+      #     filters: &filters {tags: {only: /.*/}}
+      # - danger:
+      #     filters: *filters
+      #     requires: [cache-yarn-linux]
+      # - flow:
+      #     filters: *filters
+      #     requires: [cache-yarn-linux]
+      # - jest:
+      #     filters: *filters
+      #     requires: [cache-yarn-linux]
+      # - prettier:
+      #     filters: *filters
+      #     requires: [cache-yarn-linux]
+      # - eslint:
+      #     filters: *filters
+      #     requires: [cache-yarn-linux]
+      # - data:
+      #     filters: *filters
+      #     requires: [cache-yarn-linux]
+      # - ios:
+      #     filters: *filters
+      #     requires: [danger, flow, jest, prettier, eslint, data]
+      # - android:
+      #     filters: *filters
+      #     requires: [danger, flow, jest, prettier, eslint, data, cache-bundler-linux]
+      # - ios-bundle:
+      #     filters: *filters
+      #     requires: [danger, flow, jest, prettier, eslint, data]
+      # - android-bundle:
+      #     filters: *filters
+      #     requires: [danger, flow, jest, prettier, eslint, data]
   nightly:
     triggers:
       - schedule:
@@ -108,11 +108,13 @@ jobs:
     docker: [{image: 'circleci/node:8'}]
     steps:
       - checkout
-      - restore_cache: *restore-cache-yarn
-      - run: yarn install --frozen-lockfile
-      - run: yarn --version
-      - save_cache: *save-cache-yarn
-      - persist_to_workspace: *persist-workspace-node_modules
+      - run: env
+      # - run: git diff --name-only 24a2b35c927b9668b3dfecd64ef054cbe300a4e6~1 | grep data
+      # - restore_cache: *restore-cache-yarn
+      # - run: yarn install --frozen-lockfile
+      # - run: yarn --version
+      # - save_cache: *save-cache-yarn
+      # - persist_to_workspace: *persist-workspace-node_modules
 
   cache-bundler-linux:
     docker: [{image: 'circleci/ruby:2.4'}]
