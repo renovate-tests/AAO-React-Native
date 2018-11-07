@@ -79,11 +79,11 @@ type ReleaseResponse = {
 }
 
 export type ReleaseResponseOrErrorType =
-	| {error: true, value: Error}
+	| {error: true, value: string}
 	| {error: false, value: ReleaseResponse}
 
 export type CancelResponseOrErrorType =
-	| {error: true, value: Error}
+	| {error: true, value: string}
 	| {error: false, value: Response}
 
 // https://papercut.stolaf.edu:9192/rpc/api/rest/internal/mobilerelease/api/all-printers
@@ -99,7 +99,7 @@ export type AllPrintersResponseOrErrorType =
 // &printerName=printers\mfc-it
 export type HeldJobsResponse = Array<HeldJob>
 export type HeldJobsResponseOrErrorType =
-	| {error: true, value: Error}
+	| {error: true, value: string}
 	| {error: false, value: HeldJobsResponse}
 
 type LoginResponse = {
@@ -111,5 +111,5 @@ type LoginResponse = {
 }
 
 export type LoginResponseOrErrorType =
-	| {error: true, value: Error}
+	| {error: true, value: string}
 	| {error: false, value: LoginResponse}
