@@ -1,7 +1,7 @@
 // @flow
 
-import {loadLoginCredentials} from '../../lib/login'
 import {type ReduxState} from '../index'
+import {loadCredentials} from '../../lib/login'
 import type {PrintJob, Printer} from '../../lib/stoprint'
 import {
 	fetchAllPrinters,
@@ -9,25 +9,44 @@ import {
 	fetchJobs,
 	fetchRecentPrinters,
 	logIn,
+	type StoPrintLoginResultEnum,
 } from '../../lib/stoprint'
 
 type Dispatch<A: Action> = (action: A | Promise<A> | ThunkAction<A>) => any
 type GetState = () => ReduxState
 type ThunkAction<A: Action> = (dispatch: Dispatch<A>, getState: GetState) => any
-type Action = UpdateAllPrintersAction | UpdatePrintJobsAction
+type Action =
+	| UpdateAllPrintersAction
+	| UpdatePrintJobsAction
+	| SetLoginStatusAction
 
-const UPDATE_ALL_PRINTERS_FAILURE = 'stoprint/UPDATE_ALL_PRINTERS/FAILURE'
-const UPDATE_ALL_PRINTERS_SUCCESS = 'stoprint/UPDATE_ALL_PRINTERS/SUCCESS'
-const UPDATE_PRINT_JOBS_FAILURE = 'stoprint/UPDATE_PRINT_JOBS/FAILURE'
-const UPDATE_PRINT_JOBS_SUCCESS = 'stoprint/UPDATE_PRINT_JOBS/SUCCESS'
+const SET_LOGIN_STATUS: 'stoprint/SET_LOGIN_STATUS' =
+	'stoprint/SET_LOGIN_STATUS'
+
+const UPDATE_ALL_PRINTERS_FAILURE: 'stoprint/UPDATE_ALL_PRINTERS/FAILURE' =
+	'stoprint/UPDATE_ALL_PRINTERS/FAILURE'
+
+const UPDATE_ALL_PRINTERS_SUCCESS: 'stoprint/UPDATE_ALL_PRINTERS/SUCCESS' =
+	'stoprint/UPDATE_ALL_PRINTERS/SUCCESS'
+
+const UPDATE_PRINT_JOBS_FAILURE: 'stoprint/UPDATE_PRINT_JOBS/FAILURE' =
+	'stoprint/UPDATE_PRINT_JOBS/FAILURE'
+
+const UPDATE_PRINT_JOBS_SUCCESS: 'stoprint/UPDATE_PRINT_JOBS/SUCCESS' =
+	'stoprint/UPDATE_PRINT_JOBS/SUCCESS'
+
+type SetLoginStatusAction = {
+	type: typeof SET_LOGIN_STATUS,
+	payload: StoPrintLoginResultEnum,
+}
 
 type UpdateAllPrintersFailureAction = {
-	type: 'stoprint/UPDATE_ALL_PRINTERS/FAILURE',
+	type: typeof UPDATE_ALL_PRINTERS_FAILURE,
 	payload: string,
 }
 
 type UpdateAllPrintersSuccessAction = {
-	type: 'stoprint/UPDATE_ALL_PRINTERS/SUCCESS',
+	type: typeof UPDATE_ALL_PRINTERS_SUCCESS,
 	payload: {
 		allPrinters: Array<Printer>,
 		popularPrinters: Array<Printer>,
@@ -41,12 +60,12 @@ type UpdateAllPrintersAction =
 	| UpdateAllPrintersFailureAction
 
 type UpdatePrintJobsFailureAction = {
-	type: 'stoprint/UPDATE_PRINT_JOBS/FAILURE',
+	type: typeof UPDATE_PRINT_JOBS_FAILURE,
 	payload: string,
 }
 
 type UpdatePrintJobsSuccessAction = {
-	type: 'stoprint/UPDATE_PRINT_JOBS/SUCCESS',
+	type: typeof UPDATE_PRINT_JOBS_SUCCESS,
 	payload: Array<PrintJob>,
 }
 
@@ -54,16 +73,23 @@ type UpdatePrintJobsAction =
 	| UpdatePrintJobsSuccessAction
 	| UpdatePrintJobsFailureAction
 
-export function updatePrinters(): ThunkAction<UpdateAllPrintersAction> {
+export function updatePrinters(): ThunkAction<Action> {
 	return async dispatch => {
-		const {username, password} = await loadLoginCredentials()
-		if (!username || !password) {
-			return false
+		let {username, password} = await loadCredentials()
+
+		dispatch({type: SET_LOGIN_STATUS, payload: 'checking'})
+		let loginState = await logIn(username, password)
+		dispatch({type: SET_LOGIN_STATUS, payload: loginState})
+
+		if (loginState !== 'success') {
+			return dispatch({
+				type: UPDATE_ALL_PRINTERS_FAILURE,
+				payload: loginState,
+			})
 		}
 
-		const successMsg = await logIn(username, password)
-		if (successMsg !== 'success') {
-			return dispatch({type: UPDATE_ALL_PRINTERS_FAILURE, payload: successMsg})
+		if (!username) {
+			return
 		}
 
 		const [
@@ -97,13 +123,11 @@ export function updatePrinters(): ThunkAction<UpdateAllPrintersAction> {
 			})
 		}
 
-		const {
-			recentPrinters,
-			popularPrinters,
-		} = recentAndPopularPrintersResponse.value
-		const allPrinters = allPrintersResponse.value
+		let {recentPrinters} = recentAndPopularPrintersResponse.value
+		let {popularPrinters} = recentAndPopularPrintersResponse.value
+		let allPrinters = allPrintersResponse.value
 
-		const colorPrinters = allPrinters.filter(printer =>
+		let colorPrinters = allPrinters.filter(printer =>
 			colorPrintersResponse.value.data.colorPrinters.includes(
 				printer.printerName,
 			),
@@ -111,24 +135,46 @@ export function updatePrinters(): ThunkAction<UpdateAllPrintersAction> {
 
 		dispatch({
 			type: UPDATE_ALL_PRINTERS_SUCCESS,
-			payload: {allPrinters, recentPrinters, popularPrinters, colorPrinters},
+			payload: {
+				allPrinters,
+				recentPrinters,
+				popularPrinters,
+				colorPrinters,
+			},
 		})
 	}
 }
 
-export function updatePrintJobs(): ThunkAction<UpdatePrintJobsAction> {
+export function updatePrintJobs(): ThunkAction<Action> {
 	return async dispatch => {
-		const {username, password} = await loadLoginCredentials()
-		if (!username || !password) {
-			return false
+		let {username, password} = await loadCredentials()
+
+		dispatch({type: SET_LOGIN_STATUS, payload: 'checking'})
+		let loginState = await logIn(username, password)
+		dispatch({type: SET_LOGIN_STATUS, payload: loginState})
+
+		if (loginState === 'server-error') {
+			return dispatch({
+				type: UPDATE_PRINT_JOBS_FAILURE,
+				payload: 'The print server seems to be having some issues.',
+			})
+		} else if (loginState === 'bad-credentials') {
+			return dispatch({
+				type: UPDATE_PRINT_JOBS_FAILURE,
+				payload: 'Your username or password appear to be invalid.',
+			})
+		} else if (loginState === 'no-credentials') {
+			return dispatch({
+				type: UPDATE_PRINT_JOBS_FAILURE,
+				payload: 'Please log in in the app settings.',
+			})
 		}
 
-		const successMsg = await logIn(username, password)
-		if (successMsg !== 'success') {
-			return dispatch({type: UPDATE_PRINT_JOBS_FAILURE, payload: successMsg})
+		if (!username) {
+			return
 		}
 
-		const jobsResponse = await fetchJobs(username)
+		let jobsResponse = await fetchJobs(username)
 
 		if (jobsResponse.error) {
 			return dispatch({
@@ -152,6 +198,7 @@ export type State = {|
 	colorPrinters: Array<Printer>,
 	jobsError: ?string,
 	printersError: ?string,
+	loginStatus: StoPrintLoginResultEnum,
 |}
 
 const initialState: State = {
@@ -162,10 +209,14 @@ const initialState: State = {
 	recentPrinters: [],
 	popularPrinters: [],
 	colorPrinters: [],
+	loginStatus: 'unknown',
 }
 
 export function stoprint(state: State = initialState, action: Action) {
 	switch (action.type) {
+		case SET_LOGIN_STATUS:
+			return {...state, loginStatus: action.payload}
+
 		case UPDATE_PRINT_JOBS_FAILURE:
 			return {...state, jobsError: action.payload}
 

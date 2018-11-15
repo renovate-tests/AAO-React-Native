@@ -13,6 +13,7 @@ import type {
 	CancelResponseOrErrorType,
 	HeldJobsResponseOrErrorType,
 	LoginResponseOrErrorType,
+	StoPrintLoginResultEnum,
 } from './types'
 
 const PAPERCUT_API_HEADERS = {
@@ -54,20 +55,24 @@ const orError = (message: string) => (resp: PapercutResponse) =>
 	resp.error ? {error: true, value: message} : resp
 
 export async function logIn(
-	username: string,
-	password: string,
-): Promise<'success' | string> {
+	username: ?string,
+	password: ?string,
+): Promise<StoPrintLoginResultEnum> {
+	if (!username || !password) {
+		return 'no-credentials'
+	}
+
 	const now = new Date().getTime()
 	const url = `${PAPERCUT_API}/webclient/users/${username}/log-in?nocache=${now}`
 	const body = querystring.stringify({password: encode(password)})
 	const result: LoginResponseOrErrorType = await papercutPost(url, body)
 
 	if (result.error) {
-		return 'The print server seems to be having some issues.'
+		return 'server-error'
 	}
 
 	if (!result.value.success) {
-		return 'Your username or password appear to be invalid.'
+		return 'bad-credentials'
 	}
 
 	return 'success'
@@ -142,7 +147,9 @@ export function releasePrintJobToPrinterForUser(args: {
 		jobIds: [jobId],
 	}).then(result => {
 		if (result.error === false && result.value.numJobsReleased === 0) {
-			return orError('Unable to releast the print job in stoPrint.')(result)
+			return orError('Unable to releast the print job in stoPrint.')(
+				result,
+			)
 		}
 		return result
 	})

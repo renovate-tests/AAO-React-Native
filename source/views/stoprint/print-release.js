@@ -17,7 +17,7 @@ import {
 	releasePrintJobToPrinterForUser,
 	showGeneralError,
 } from '../../lib/stoprint'
-import {loadLoginCredentials} from '../../lib/login'
+import {loadCredentials} from '../../lib/login'
 
 const styles = StyleSheet.create({
 	cancelButton: {
@@ -100,7 +100,7 @@ export class PrintJobReleaseView extends React.PureComponent<Props, State> {
 	}
 
 	getHeldJob = async () => {
-		let {username = null} = await loadLoginCredentials()
+		let {username = null} = await loadCredentials()
 		if (!username) {
 			Alert.alert(
 				'Not Logged In',

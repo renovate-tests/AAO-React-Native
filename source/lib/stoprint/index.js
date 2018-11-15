@@ -23,5 +23,6 @@ export type {
 	ReleaseResponseOrErrorType,
 	CancelResponseOrErrorType,
 	HeldJobsResponseOrErrorType,
+	StoPrintLoginResultEnum,
 } from './types'
 export {showGeneralError} from './errors'

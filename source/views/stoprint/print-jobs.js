@@ -15,6 +15,13 @@ import {
 	Title,
 } from '@frogpond/lists'
 import {LoadingView} from '@frogpond/notice'
+import {
+	loadCredentials,
+	saveCredentials,
+	clearCredentials,
+	validateCredentials,
+	type LoginResultEnum,
+} from '../../lib/login'
 import type {TopLevelViewPropsType} from '../types'
 import delay from 'delay'
 import {openUrl} from '@frogpond/open-url'
@@ -30,7 +37,6 @@ type ReactProps = TopLevelViewPropsType
 type ReduxStateProps = {
 	jobs: Array<PrintJob>,
 	error: ?string,
-	loginState: string,
 }
 
 type ReduxDispatchProps = {
@@ -42,6 +48,7 @@ type Props = ReactProps & ReduxDispatchProps & ReduxStateProps
 type State = {
 	initialLoadComplete: boolean,
 	loading: boolean,
+	loginState: 'initializing' | 'checking' | LoginResultEnum,
 }
 
 class PrintJobsView extends React.PureComponent<Props, State> {
@@ -53,6 +60,7 @@ class PrintJobsView extends React.PureComponent<Props, State> {
 	state = {
 		initialLoadComplete: false,
 		loading: true,
+		loginState: 'initializing',
 	}
 
 	componentDidMount() {
@@ -118,25 +126,28 @@ class PrintJobsView extends React.PureComponent<Props, State> {
 	)
 
 	render() {
-		if (this.props.loginState === 'checking') {
+		let {error, jobs} = this.props
+		let {loading, loginState, initialLoadComplete} = this.state
+
+		if (loginState === 'checking') {
 			return <LoadingView text="Logging in…" />
 		}
 
-		if (this.props.error) {
+		if (error) {
 			return (
 				<StoPrintErrorView
 					navigation={this.props.navigation}
 					refresh={this.fetchData}
-					statusMessage={this.props.error}
+					statusMessage={error}
 				/>
 			)
 		}
 
-		if (this.state.loading && !this.state.initialLoadComplete) {
+		if (loading && !initialLoadComplete) {
 			return <LoadingView text="Fetching a list of stoPrint Jobs…" />
 		}
 
-		if (this.props.loginState !== 'logged-in') {
+		if (loginState !== 'logged-in') {
 			return (
 				<StoPrintNoticeView
 					buttonText="Open Settings"
@@ -148,7 +159,7 @@ class PrintJobsView extends React.PureComponent<Props, State> {
 			)
 		}
 
-		if (this.props.jobs.length === 0) {
+		if (jobs.length === 0) {
 			const instructions =
 				Platform.OS === 'android'
 					? 'using the Mobility Print app'
@@ -167,7 +178,7 @@ class PrintJobsView extends React.PureComponent<Props, State> {
 			)
 		}
 
-		let grouped = groupBy(this.props.jobs, j => j.statusFormatted || 'Other')
+		let grouped = groupBy(jobs, j => j.statusFormatted || 'Other')
 		let groupedJobs = toPairs(grouped).map(([title, data]) => ({
 			title,
 			data,
@@ -181,7 +192,7 @@ class PrintJobsView extends React.PureComponent<Props, State> {
 				ItemSeparatorComponent={ListSeparator}
 				keyExtractor={this.keyExtractor}
 				onRefresh={(this.refresh: any)}
-				refreshing={this.state.loading}
+				refreshing={loading}
 				renderItem={this.renderItem}
 				renderSectionHeader={this.renderSectionHeader}
 				sections={sortedGroupedJobs}
@@ -194,7 +205,6 @@ function mapStateToProps(state: ReduxState): ReduxStateProps {
 	return {
 		jobs: state.stoprint ? state.stoprint.jobs : [],
 		error: state.stoprint ? state.stoprint.jobsError : null,
-		loginState: state.settings ? state.settings.loginState : 'logged-out',
 	}
 }
 

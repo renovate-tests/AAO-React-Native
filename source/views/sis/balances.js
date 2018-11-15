@@ -12,15 +12,19 @@ import {
 import {TabBarIcon} from '@frogpond/navigation-tabs'
 import {connect} from 'react-redux'
 import {Cell, TableView, Section} from '@frogpond/tableview'
-import {
-	hasSeenAcknowledgement,
-	type LoginStateType,
-} from '../../redux/parts/settings'
+import {hasSeenAcknowledgement} from '../../redux/parts/settings'
 import {getBalances} from '../../lib/financials'
 import {type ReduxState} from '../../redux'
 import delay from 'delay'
 import * as c from '@frogpond/colors'
 import type {TopLevelViewPropsType} from '../types'
+import {
+	loadCredentials,
+	saveCredentials,
+	clearCredentials,
+	validateCredentials,
+	type LoginResultEnum,
+} from '../../lib/login'
 
 const DISCLAIMER = 'This data may be outdated or otherwise inaccurate.'
 const LONG_DISCLAIMER =
@@ -29,7 +33,6 @@ const LONG_DISCLAIMER =
 type ReactProps = TopLevelViewPropsType
 
 type ReduxStateProps = {
-	loginState: LoginStateType,
 	alertSeen: boolean,
 }
 
@@ -41,6 +44,13 @@ type Props = ReactProps & ReduxStateProps & ReduxDispatchProps
 
 type State = {
 	loading: boolean,
+	loginState:
+		| 'initializing'
+		| 'checking'
+		| 'error'
+		| 'data'
+		| LoginResultEnum
+		| null,
 	flex: ?string,
 	ole: ?string,
 	print: ?string,
@@ -57,7 +67,8 @@ class BalancesView extends React.PureComponent<Props, State> {
 	}
 
 	state = {
-		loading: false,
+		loading: true,
+		loginState: 'initializing',
 		flex: null,
 		ole: null,
 		print: null,
@@ -96,16 +107,23 @@ class BalancesView extends React.PureComponent<Props, State> {
 	fetchData = async () => {
 		let balances = await getBalances()
 
-		if (balances.error === true) {
+		this.setState(() => ({loginState: balances.type}))
+
+		if (balances.type === 'error') {
+			this.setState(() => ({message: balances.value}))
+			return
+		}
+
+		if (balances.type !== 'data') {
 			return
 		}
 
 		let {value} = balances
-
 		let {flex, ole, print} = value
 		let {weekly: weeklyMeals, daily: dailyMeals, plan: mealPlan} = value
 
 		this.setState(() => ({
+			message: null,
 			flex,
 			ole,
 			print,
@@ -129,8 +147,10 @@ class BalancesView extends React.PureComponent<Props, State> {
 			mealPlan,
 			message,
 			loading,
+			loginState,
 		} = this.state
-		let {loginState} = this.props
+
+		let loggedIn = loginState === 'data'
 
 		return (
 			<ScrollView
@@ -192,18 +212,18 @@ class BalancesView extends React.PureComponent<Props, State> {
 					</Section>
 				</TableView>
 
-				{(loginState !== 'logged-in' || message) && (
+				{(!loggedIn || message) && (
 					<Section footer="You'll need to log in in order to see this data.">
-						{loginState !== 'logged-in' ? (
+						{!loggedIn && (
 							<Cell
 								accessory="DisclosureIndicator"
 								cellStyle="Basic"
 								onPress={this.openSettings}
 								title="Log in with St. Olaf"
 							/>
-						) : null}
+						)}
 
-						{message ? <Cell cellStyle="Basic" title={message} /> : null}
+						{message && <Cell cellStyle="Basic" title={message} />}
 					</Section>
 				)}
 			</ScrollView>
@@ -214,7 +234,6 @@ class BalancesView extends React.PureComponent<Props, State> {
 function mapState(state: ReduxState): ReduxStateProps {
 	return {
 		alertSeen: state.settings ? state.settings.unofficiallyAcknowledged : false,
-		loginState: state.settings ? state.settings.loginState : 'logged-out',
 	}
 }
 

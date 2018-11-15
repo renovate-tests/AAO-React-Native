@@ -1,7 +1,7 @@
 // @flow
 import {clearAsyncStorage} from './storage'
 import restart from 'react-native-restart'
-import {clearLoginCredentials} from './login'
+import {clearCredentials} from './login'
 import * as icons from '@hawkrives/react-native-alternate-icons'
 
 export async function refreshApp() {
@@ -16,7 +16,7 @@ export async function refreshApp() {
 	await clearAsyncStorage()
 
 	// Clear the Keychain items
-	await clearLoginCredentials()
+	await clearCredentials()
 
 	// Reset the app icon
 	if ((await icons.getIconName()) !== 'default') {

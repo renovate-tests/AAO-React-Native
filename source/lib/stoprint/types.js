@@ -1,5 +1,13 @@
 // @flow
 
+export type StoPrintLoginResultEnum =
+	| 'unknown'
+	| 'checking'
+	| 'no-credentials'
+	| 'bad-credentials'
+	| 'server-error'
+	| 'success'
+
 export type PrintJob = {
 	copies: number,
 	documentName: string,

@@ -1,67 +1,96 @@
 // @flow
+
+import {Alert} from 'react-native'
+import {trackLogOut, trackLogIn, trackLoginFailure} from '@frogpond/analytics'
 import {
 	setInternetCredentials,
 	getInternetCredentials,
 	resetInternetCredentials,
 } from 'react-native-keychain'
-
 import buildFormData from './formdata'
 import {OLECARD_AUTH_URL} from './financials/urls'
 
 const SIS_LOGIN_KEY = 'stolaf.edu'
-
 const empty = () => ({})
 
-export type Credentials = {username: string, password: string}
-export type MaybeCredentials = {username?: string, password?: string}
-
-export function saveLoginCredentials({username, password}: Credentials) {
-	return setInternetCredentials(SIS_LOGIN_KEY, username, password).catch(empty)
-}
-export function loadLoginCredentials(): Promise<MaybeCredentials> {
-	return getInternetCredentials(SIS_LOGIN_KEY).catch(empty)
-}
-export function clearLoginCredentials() {
-	return resetInternetCredentials(SIS_LOGIN_KEY).catch(empty)
-}
+type MaybeCredentials = {username?: string, password?: string}
 
 export type LoginResultEnum =
 	| 'success'
-	| 'network'
+	| 'no-network'
 	| 'bad-credentials'
 	| 'no-credentials'
 
-type Args = {attempts?: number}
+export type LoginResult = {type: LoginResultEnum}
 
-export async function performLogin({attempts = 0}: Args = {}): Promise<
-	LoginResultEnum,
-> {
-	let {username, password} = await loadLoginCredentials()
+export function loadCredentials(): Promise<MaybeCredentials> {
+	return getInternetCredentials(SIS_LOGIN_KEY).catch(empty)
+}
+
+export function saveCredentials(user: string, pass: string): Promise<void> {
+	return setInternetCredentials(SIS_LOGIN_KEY, user, pass).catch(empty)
+}
+
+export function clearCredentials(): Promise<void> {
+	trackLogOut()
+	return resetInternetCredentials(SIS_LOGIN_KEY).catch(empty)
+}
+
+export async function validateCredentials({
+	maxAttempts = 3,
+}: {maxAttempts?: number} = {}): Promise<LoginResult> {
+	let {username, password} = await loadCredentials()
 	if (!username || !password) {
-		return 'no-credentials'
+		trackLoginFailure('No credentials')
+		showUnknownLoginMessage()
+		return {type: 'no-credentials'}
 	}
 
-	const form = buildFormData({username, password})
-	let loginResult = null
+	let form = buildFormData({username, password})
 	try {
-		loginResult = await fetch(OLECARD_AUTH_URL, {
+		let loginResult = await fetch(OLECARD_AUTH_URL, {
 			method: 'POST',
 			body: form,
 		})
+
+		let page = await loginResult.text()
+		if (page.includes('Password')) {
+			trackLoginFailure('Bad credentials')
+			showInvalidLoginMessage()
+			return {type: 'bad-credentials'}
+		}
+
+		trackLogIn()
+		return {type: 'success'}
 	} catch (err) {
 		let wasNetworkFailure = err.message === 'Network request failed'
-		if (wasNetworkFailure && attempts > 0) {
-			// console.log(`login failed; trying ${attempts - 1} more time(s)`)
-			return performLogin({attempts: attempts - 1})
+		if (wasNetworkFailure && maxAttempts > 0) {
+			return validateCredentials({maxAttempts: maxAttempts - 1})
 		}
-		return 'network'
+
+		trackLoginFailure('No network')
+		showNetworkFailureMessage()
+		return {type: 'no-network'}
 	}
-
-	const page = await loginResult.text()
-
-	if (page.includes('Password')) {
-		return 'bad-credentials'
-	}
-
-	return 'success'
 }
+
+export const showNetworkFailureMessage = () =>
+	Alert.alert(
+		'Network Failure',
+		'You are not connected to the internet. Please connect if you want to access this feature.',
+		[{text: 'OK'}],
+	)
+
+export const showInvalidLoginMessage = () =>
+	Alert.alert(
+		'Invalid Login',
+		'The username and password you provided do not match a valid account. Please try again.',
+		[{text: 'OK'}],
+	)
+
+export const showUnknownLoginMessage = () =>
+	Alert.alert(
+		'Unknown Login',
+		'No username and password were provided. Please try again.',
+		[{text: 'OK'}],
+	)

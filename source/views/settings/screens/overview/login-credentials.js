@@ -4,38 +4,30 @@ import * as React from 'react'
 import {Cell, Section, CellTextField} from '@frogpond/tableview'
 import {LoginButton} from './login-button'
 import {
-	logInViaCredentials,
-	logOutViaCredentials,
-	type LoginStateType,
-} from '../../../../redux/parts/settings'
-import {loadLoginCredentials} from '../../../../lib/login'
-import {type ReduxState} from '../../../../redux'
-import {connect} from 'react-redux'
+	loadCredentials,
+	saveCredentials,
+	clearCredentials,
+	validateCredentials,
+	type LoginResultEnum,
+} from '../../../../lib/login'
 import noop from 'lodash/noop'
 
-type ReduxStateProps = {
-	loginState: LoginStateType,
-}
-
-type ReduxDispatchProps = {
-	logIn: (string, string) => any,
-	logOut: () => any,
-}
-
-type Props = ReduxStateProps & ReduxDispatchProps
+type Props = {}
 
 type State = {
 	username: string,
 	password: string,
+	loginState: 'initializing' | 'checking' | LoginResultEnum | null,
 }
 
-class CredentialsLoginSection extends React.Component<Props, State> {
+export class CredentialsLoginSection extends React.Component<Props, State> {
 	_usernameInput: any
 	_passwordInput: any
 
 	state = {
 		username: '',
 		password: '',
+		loginState: 'initializing',
 	}
 
 	componentDidMount() {
@@ -46,37 +38,53 @@ class CredentialsLoginSection extends React.Component<Props, State> {
 	focusPassword = () => this._passwordInput.focus()
 
 	loadCredentialsFromKeychain = async () => {
-		let {username = '', password = ''} = await loadLoginCredentials()
+		let {username = '', password = ''} = await loadCredentials()
 		this.setState(() => ({username, password}))
 
 		if (username && password) {
-			this.props.logIn(username, password)
+			this.validate()
+		} else {
+			this.setState(() => ({loginState: 'no-credentials'}))
 		}
 	}
 
-	logIn = () => this.props.logIn(this.state.username, this.state.password)
-
-	logOut = () => {
-		this.setState(() => ({username: '', password: ''}))
-		this.props.logOut()
+	validate = async () => {
+		this.setState(() => ({loginState: 'checking'}))
+		let {type} = await validateCredentials()
+		this.setState(() => ({loginState: type}))
 	}
 
-	getUsernameRef = ref => (this._usernameInput = ref)
-	getPasswordRef = ref => (this._passwordInput = ref)
+	logIn = async () => {
+		await saveCredentials(this.state.username, this.state.password)
+		this.validate()
+	}
 
-	onChangeUsername = (text = '') => this.setState(() => ({username: text}))
-	onChangePassword = (text = '') => this.setState(() => ({password: text}))
+	logOut = () => {
+		this.setState(() => ({
+			username: '',
+			password: '',
+			loginState: 'no-credentials',
+		}))
+		clearCredentials()
+	}
+
+	getUsernameRef = (ref: any) => (this._usernameInput = ref)
+	getPasswordRef = (ref: any) => (this._passwordInput = ref)
+
+	onChangeUsername = (text: string = '') =>
+		this.setState(() => ({username: text}))
+	onChangePassword = (text: string = '') =>
+		this.setState(() => ({password: text}))
 
 	render() {
-		const {loginState} = this.props
-		const {username, password} = this.state
+		let {username, password, loginState} = this.state
 
-		const loggedIn = loginState === 'logged-in'
-		const loading = loginState === 'checking'
+		let loggedIn = loginState === 'success'
+		let loading = loginState === 'checking'
 
 		return (
 			<Section
-				footer="St. Olaf login enables the &quot;meals remaining&quot; feature."
+				footer='St. Olaf login enables the "meals remaining" feature.'
 				header="ST. OLAF LOGIN"
 			>
 				{loggedIn ? (
@@ -121,23 +129,3 @@ class CredentialsLoginSection extends React.Component<Props, State> {
 		)
 	}
 }
-
-function mapStateToProps(state: ReduxState): ReduxStateProps {
-	if (!state.settings) {
-		return {loginState: 'initializing'}
-	}
-
-	return {loginState: state.settings.loginState}
-}
-
-function mapDispatchToProps(dispatch): ReduxDispatchProps {
-	return {
-		logOut: () => dispatch(logOutViaCredentials()),
-		logIn: (user, pass) => dispatch(logInViaCredentials(user, pass)),
-	}
-}
-
-export const ConnectedCredentialsLoginSection = connect(
-	mapStateToProps,
-	mapDispatchToProps,
-)(CredentialsLoginSection)
