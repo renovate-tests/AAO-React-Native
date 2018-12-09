@@ -8,7 +8,7 @@ platform :android do
     build_status = 0
     begin
       propagate_version(track: options[:track])
-      gradle(task: 'assemble',
+      gradle(task: 'app:assemble',
              build_type: 'Release',
              print_command: true,
              print_command_output: true)

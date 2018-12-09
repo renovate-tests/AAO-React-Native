@@ -25,70 +25,78 @@ import com.oblador.keychain.KeychainPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.pusherman.networkinfo.RNNetworkInfoPackage;
 
+import com.reactnativenavigation.NavigationApplication;
+import com.reactnativenavigation.react.NavigationReactNativeHost;
+import com.reactnativenavigation.react.ReactGateway;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainApplication extends Application implements ReactApplication {
-
-  private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
+public class MainApplication extends NavigationApplication {
     @Override
-    public boolean getUseDeveloperSupport() {
-      return BuildConfig.DEBUG;
+    protected ReactGateway createReactGateway() {
+        ReactNativeHost host = new NavigationReactNativeHost(this, isDebug(), createAdditionalReactPackages()) {
+            @Override
+            protected String getJSMainModuleName() {
+                return "index";
+            }
+        };
+
+        return new ReactGateway(this, isDebug(), host);
     }
 
     @Override
+    public boolean isDebug() {
+        return BuildConfig.DEBUG;
+    }
+
     protected List<ReactPackage> getPackages() {
-      return Arrays.<ReactPackage>asList(
-        new MainReactPackage(),
-        // please keep these sorted alphabetically
-        BugsnagReactNative.getPackage(),
-        new CalendarEventsPackage(),
-        new CustomTabsPackage(),
-        new GoogleAnalyticsBridgePackage(),
-        new KeychainPackage(),
-        new LinearGradientPackage(),
-        new RCTMGLPackage(),
-        new ReactNativeOneSignalPackage(),
-        new ReactNativeRestartPackage(),
-        new RNDeviceInfo(),
-        new RNNetworkInfoPackage(),
-        new VectorIconsPackage()
-      );
+        // Add additional packages you require here
+        // No need to add RnnPackage and MainReactPackage
+        return Arrays.<ReactPackage>asList(
+                // please keep these sorted alphabetically
+                BugsnagReactNative.getPackage(),
+                new CalendarEventsPackage(),
+                new CustomTabsPackage(),
+                new GoogleAnalyticsBridgePackage(),
+                new KeychainPackage(),
+                new LinearGradientPackage(),
+                new RCTMGLPackage(),
+                new ReactNativeOneSignalPackage(),
+                new ReactNativeRestartPackage(),
+                new RNDeviceInfo(),
+                new RNNetworkInfoPackage(),
+                new VectorIconsPackage()
+        );
     }
 
     @Override
-    protected String getJSMainModuleName() {
-      return "index";
+    public List<ReactPackage> createAdditionalReactPackages() {
+        return getPackages();
     }
-  };
 
-  @Override
-  public ReactNativeHost getReactNativeHost() {
-    return mReactNativeHost;
-  }
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        SoLoader.init(this, /* native exopackage */ false);
 
-  @Override
-  public void onCreate() {
-    super.onCreate();
-    SoLoader.init(this, /* native exopackage */ false);
-
-    // set up network cache
-    try {
-      File httpCacheDir = new File(getApplicationContext().getCacheDir(), "http");
-      long httpCacheSize = 20 * 1024 * 1024; // 20 MiB
-      HttpResponseCache.install(httpCacheDir, httpCacheSize);
-    } catch (IOException e) {
-      Log.i("allaboutolaf", "HTTP response cache installation failed:", e);
-      //      Log.i(TAG, "HTTP response cache installation failed:", e);
+        // set up network cache
+        try {
+            File httpCacheDir = new File(getApplicationContext().getCacheDir(), "http");
+            long httpCacheSize = 20 * 1024 * 1024; // 20 MiB
+            HttpResponseCache.install(httpCacheDir, httpCacheSize);
+        } catch (IOException e) {
+            Log.i("allaboutolaf", "HTTP response cache installation failed:", e);
+            // Log.i(TAG, "HTTP response cache installation failed:", e);
+        }
     }
-  }
 
-  public void onStop() {
-    HttpResponseCache cache = HttpResponseCache.getInstalled();
-    if (cache != null) {
-      cache.flush();
+    public void onStop() {
+        HttpResponseCache cache = HttpResponseCache.getInstalled();
+        if (cache != null) {
+            cache.flush();
+        }
     }
-  }
 }

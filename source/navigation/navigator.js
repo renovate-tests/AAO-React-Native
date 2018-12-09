@@ -1,35 +1,14 @@
 // @flow
 
-import {Platform, StyleSheet} from 'react-native'
-import {createStackNavigator} from 'react-navigation'
-import * as c from '@frogpond/colors'
-import {getTheme} from '@frogpond/app-theme'
+import {Navigation} from 'react-native-navigation'
 import {routes} from './routes'
 
-let theme = getTheme()
+const initialStack = [{component: {name: 'app.home.view'}}]
 
-const styles = StyleSheet.create({
-	header: {
-		backgroundColor: theme.navigationBackground,
-	},
-	card: {
-		backgroundColor: Platform.select({
-			ios: c.iosLightBackground,
-			android: c.androidLightBackground,
-		}),
-	},
+Navigation.events().registerAppLaunchedListener(() => {
+	Navigation.setRoot({
+		root: {
+			stack: {children: initialStack},
+		},
+	})
 })
-
-const navigatorOptions = {
-	navigationOptions: {
-		headerStyle: styles.header,
-		headerTintColor: theme.navigationForeground,
-	},
-	headerTransitionPreset: Platform.select({
-		ios: 'uikit',
-		android: undefined,
-	}),
-	cardStyle: styles.card,
-}
-
-export const AppNavigator = createStackNavigator(routes, navigatorOptions)

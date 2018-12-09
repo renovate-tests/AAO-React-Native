@@ -1,5 +1,14 @@
 // @flow
 
-export {trackScreenChanges} from './track'
-export {AppNavigator} from './navigator'
-export {persistenceKey} from './constants'
+import {Navigation} from 'react-native-navigation'
+import {routes} from './routes'
+
+const initialStack = [{component: {name: 'app.home.view'}}]
+
+Navigation.events().registerAppLaunchedListener(() => {
+	Navigation.setRoot({
+		root: {
+			stack: {children: initialStack},
+		},
+	})
+})

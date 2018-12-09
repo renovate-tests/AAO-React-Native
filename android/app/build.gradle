@@ -104,6 +104,9 @@ android {
     defaultConfig {
         applicationId "com.allaboutolaf"
 
+        // pick the correct version of RN for rnn to use
+        missingDimensionStrategy "RNN.reactNativeVersion", "reactNative57"
+
         minSdkVersion 21
         targetSdkVersion TARGET_SDK_VERSION
 
@@ -119,6 +122,11 @@ android {
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     ext {
@@ -236,6 +244,7 @@ dependencies {
     implementation project(':react-native-google-analytics-bridge')
     implementation project(':react-native-keychain')
     implementation project(':react-native-linear-gradient')
+    implementation project(':react-native-navigation')
     implementation project(':react-native-network-info')
     implementation project(':react-native-onesignal')
     implementation project(':react-native-restart')
@@ -264,4 +273,20 @@ gradle.projectsEvaluated {
     // hook bundleData into the android build process
     bundleDebugJsAndAssets.dependsOn bundleData
     bundleReleaseJsAndAssets.dependsOn bundleData
+}
+
+// ignore the other versions of rnn
+subprojects { subproject ->
+    afterEvaluate {
+        if ((subproject.plugins.hasPlugin('android') || subproject.plugins.hasPlugin('android-library'))) {
+            android {
+                variantFilter { variant ->
+                    def names = variant.flavors*.name
+                    if (names.contains("reactNative51") || names.contains("reactNative55")) {
+                        setIgnore(true)
+                    }
+                }
+            }
+        }
+    }
 }
