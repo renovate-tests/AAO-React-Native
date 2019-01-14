@@ -45,5 +45,7 @@
       ],
       "groupName": "redux packages"
     }
-  ]
+  ],
+  "includeForks": true,
+  "bundler": { "enabled": true }
 }
